@@ -7,10 +7,16 @@ export class AiService {
   private readonly apiKey: string;
 
   constructor(config: ConfigService) {
-    this.apiKey = config.get<string>("GEMINI_API_KEY") || "AIzaSyBZomrFCxL1XLAzRUnL8kmLo6q-SrsMO0s";
+    this.apiKey = config.get<string>("GEMINI_API_KEY") || "";
+    if (!this.apiKey) {
+      this.logger.warn("GEMINI_API_KEY environment variable is missing. Gemini AI features will be disabled.");
+    }
   }
 
   private async callGemini(prompt: string): Promise<string> {
+    if (!this.apiKey) {
+      throw new InternalServerErrorException("Gemini AI API key is not configured in the environment.");
+    }
     try {
       const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
       const response = await fetch(url, {
