@@ -31,14 +31,51 @@ const iconFor = (domain: string) => {
 };
 
 export default function ClinicalKnowledgeCenterPage() {
-  const { profile } = useAuthStore();
-  const userRoles = profile?.roles?.map((r: any) => r.name) || [];
+  const { profile, user } = useAuthStore();
+  const userRoles = useMemo(() => {
+    const rolesFromProfile = profile?.roles?.map((r: any) => r.name) || [];
+    const rolesFromUser = user?.roles || [];
+    return Array.from(new Set([...rolesFromProfile, ...rolesFromUser]));
+  }, [profile, user]);
+
   const isAdminOrCmo = userRoles.includes("hospital_admin") || userRoles.includes("super_admin") || userRoles.includes("medical_director");
   const isCmo = userRoles.includes("medical_director");
 
+  // Resolve default active role from user profile roles
+  const defaultRole = useMemo(() => {
+    if (userRoles.includes("nurse")) return "nurse";
+    if (userRoles.includes("pharmacist")) return "pharmacist";
+    if (userRoles.includes("lab_technician")) return "lab_staff";
+    if (userRoles.includes("radiologist")) return "radiologist";
+    if (userRoles.includes("receptionist")) return "receptionist";
+    if (userRoles.includes("cashier") || userRoles.includes("finance_officer")) return "billing";
+    if (userRoles.includes("emergency") || userRoles.includes("triage_nurse")) return "emergency";
+    
+    // Specialists
+    const email = (profile?.email || "").toLowerCase();
+    if (userRoles.includes("specialist") || userRoles.includes("doctor")) {
+      if (email.includes("cardio")) return "cardiologist";
+      if (email.includes("pulmo")) return "pulmonologist";
+      return "doctor";
+    }
+    
+    return "doctor"; // Default fallback
+  }, [userRoles, profile]);
+
   // Simulated Role selector for testing/demo adaptive workspaces
   const [simulatedRole, setSimulatedRole] = useState<string>("");
-  const activeRole = simulatedRole || userRoles[0] || "doctor";
+  const activeRole = simulatedRole || defaultRole;
+
+  const [activeTab, setActiveTab] = useState<string>("reference");
+
+  // Automatically set default tab on role load
+  useEffect(() => {
+    if (activeRole === "doctor" || activeRole === "cardiologist" || activeRole === "pulmonologist") {
+      setActiveTab("reference");
+    } else {
+      setActiveTab("dashboard");
+    }
+  }, [activeRole]);
 
   // CMO Guideline approvals state
   const [approvalsQueue, setApprovalsQueue] = useState([
@@ -51,8 +88,6 @@ export default function ClinicalKnowledgeCenterPage() {
     query, domain, specialty, results, selected, calculators, specialties, loading, error,
     setQuery, setDomain, setSpecialty, bootstrap, search, loadDetail
   } = useClinicalKnowledgeStore();
-
-  const [activeTab, setActiveTab] = useState<string>("reference");
 
   // Administrative Import State
   const [importSourceType, setImportSourceType] = useState<"cdc-icd10-cm" | "rxnorm-prescribable" | "loinc" | "medlineplus">("cdc-icd10-cm");
@@ -214,22 +249,24 @@ export default function ClinicalKnowledgeCenterPage() {
               </p>
             </div>
             
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-[#93a096] font-semibold uppercase">Simulate Role:</span>
-              <select
-                value={simulatedRole}
-                onChange={e => {
-                  setSimulatedRole(e.target.value);
-                  // Reset tab to default when changing simulated role
-                  setActiveTab(e.target.value === "doctor" || e.target.value === "cardiologist" || e.target.value === "pulmonologist" ? "reference" : "dashboard");
-                }}
-                className="bg-[#070b09] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-[#9fd8bd] font-bold focus:outline-none focus:border-[#9fd8bd]"
-              >
-                {roles.map(r => (
-                  <option key={r.id} value={r.id}>{r.label}</option>
-                ))}
-              </select>
-            </div>
+            {isAdminOrCmo && (
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-[#93a096] font-semibold uppercase">Simulate Role:</span>
+                <select
+                  value={simulatedRole}
+                  onChange={e => {
+                    setSimulatedRole(e.target.value);
+                    // Reset tab to default when changing simulated role
+                    setActiveTab(e.target.value === "doctor" || e.target.value === "cardiologist" || e.target.value === "pulmonologist" ? "reference" : "dashboard");
+                  }}
+                  className="bg-[#070b09] border border-white/10 rounded-lg px-3 py-1.5 text-xs text-[#9fd8bd] font-bold focus:outline-none focus:border-[#9fd8bd]"
+                >
+                  {roles.map(r => (
+                    <option key={r.id} value={r.id}>{r.label}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </section>
 
