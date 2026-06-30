@@ -1,0 +1,17 @@
+export enum Permission {
+  PatientRead = "Patient.Read",
+  PatientWrite = "Patient.Write",
+  PatientDelete = "Patient.Delete",
+  PatientMedicalRecordAccess = "Patient.MedicalRecord.Access",
+  BillingInvoiceCreate = "Billing.Invoice.Create",
+  BillingInvoiceApprove = "Billing.Invoice.Approve",
+  BillingInvoiceVoid = "Billing.Invoice.Void",
+  LabOrderCreate = "Lab.Order.Create",
+  LabResultPublish = "Lab.Result.Publish",
+  LabResultCriticalAlertOverride = "Lab.Result.CriticalAlert.Override",
+  InventoryStockEdit = "Inventory.Stock.Edit",
+  InventoryPurchaseOrderApprove = "Inventory.PurchaseOrder.Approve",
+  PharmacyControlledDrugDispense = "Pharmacy.ControlledDrug.Dispense",
+  SurgeryOperatingRoomSchedule = "Surgery.OperatingRoom.Schedule",
+  IcuVentilatorAssign = "ICU.Ventilator.Assign",
+}
