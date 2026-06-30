@@ -1,0 +1,28 @@
+import * as Joi from "joi";
+
+export const validationSchema = Joi.object({
+  NODE_ENV: Joi.string().valid("development", "test", "staging", "production").default("development"),
+  PORT: Joi.number().port().default(8000),
+  API_PREFIX: Joi.string().default("api"),
+  API_VERSION: Joi.string().default("v1"),
+  CORS_ORIGINS: Joi.string().required(),
+  DATABASE_URL: Joi.string().uri({ scheme: ["postgres", "postgresql"] }).optional(),
+  DATABASEDB: Joi.string().uri({ scheme: ["postgres", "postgresql"] }).optional(),
+  databasedb: Joi.string().uri({ scheme: ["postgres", "postgresql"] }).optional(),
+  POSTGRES_HOST: Joi.string().optional(),
+  POSTGRES_PORT: Joi.number().port().default(5432),
+  POSTGRES_USER: Joi.string().optional(),
+  POSTGRES_PASSWORD: Joi.string().optional(),
+  POSTGRES_DB: Joi.string().optional(),
+  POSTGRES_SSL: Joi.boolean().truthy("true").falsy("false").default(false),
+  REDIS_HOST: Joi.string().required(),
+  REDIS_PORT: Joi.number().port().default(6379),
+  REDIS_PASSWORD: Joi.string().allow("").optional(),
+  JWT_ACCESS_SECRET: Joi.string().min(32).required(),
+  JWT_REFRESH_SECRET: Joi.string().min(32).required(),
+  JWT_ACCESS_TTL_SECONDS: Joi.number().integer().positive().default(900),
+  JWT_REFRESH_TTL_SECONDS: Joi.number().integer().positive().default(604800),
+  BCRYPT_ROUNDS: Joi.number().integer().min(10).max(14).default(12),
+  RATE_LIMIT_TTL_SECONDS: Joi.number().integer().positive().default(60),
+  RATE_LIMIT_MAX: Joi.number().integer().positive().default(100),
+});
