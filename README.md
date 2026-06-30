@@ -1,157 +1,164 @@
-# MedLink Addis EMR & HMS
+# 🏥 MedLink Addis — Next-Gen EMR & Hospital Management System
 
-An enterprise-grade, multi-tenant Electronic Medical Record (EMR) and Hospital Management System (HMS) tailored for modern clinic administration, inpatient ward management, pharmacy dispensing, billing desks, and live clinical consultations.
+[![Next.js](https://img.shields.io/badge/Next.js-15+-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-10+-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-v3+-38B2AC?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Postgres](https://img.shields.io/badge/PostgreSQL-15+-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![AI-Powered](https://img.shields.io/badge/AI--Scribe-Gemini%20Flash-4285F4?style=for-the-badge&logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
+
+MedLink Addis is an enterprise-grade, multi-tenant Electronic Medical Record (EMR) and Hospital Management System (HMS) designed to streamline clinical workflows, automate documentation, and secure operations. It features ambient AI clinical scribes, WebRTC-based telehealth consultations, live ward maps, and strict HIPAA-compliant audit logs.
 
 ---
 
-## 🏗️ System Architecture & Folder Layout
-
-The repository is organized as a multi-project workspace containing a **Next.js Frontend Client** and a **NestJS Backend REST API**:
+## 🗺️ System Architecture & Folder Layout
 
 ```
 Med link addis/
-├── medlink-addis/           # Next.js 15+ Frontend Client (Tailwind CSS, Zustand, Lucide)
-├── medlink-api/             # NestJS Backend API (TypeORM, PostgreSQL/Supabase, JWT Auth)
-├── Assets/                  # Design assets and static mock resources
-├── Spec.md                  # Comprehensive clinical specifications
-├── README.md                # System Architecture & Documentation (this file)
+├── medlink-addis/           # Next.js Frontend Client (Zustand, Tailwind, Lucide)
+├── medlink-api/             # NestJS Backend REST API (TypeORM, Supabase, JWT)
+├── Assets/                  # Mock screenshots & volumetric interface design guides
+├── Spec.md                  # Deep clinical workflows specification
+├── SYSTEM_AUDIT.md          # HIPAA compliance framework guidelines
 └── .gitignore               # Multi-project exclusions (ignores .env and node_modules)
 ```
 
 ---
 
-## 🖥️ Frontend Architecture (`medlink-addis`)
+## 🏗️ Technical Stack & Data Flow
 
-The client application is built using the **Next.js App Router** structure with central Zustand state stores.
-
-### 📂 Directory Map
-```
-medlink-addis/
-├── app/
-│   ├── layout.tsx           # Root HTML layout and fonts loader
-│   ├── page.tsx             # Root page (auth redirect checker)
-│   ├── login/
-│   │   └── page.tsx         # Secure login screen with tenant domain selector
-│   └── (app)/               # Authed app layouts & sidebar workspace shell
-│       ├── layout.tsx       # Auth status verification & sidebar navigator wrapper
-│       ├── dashboard/
-│       │   └── page.tsx     # KPI Metrics dashboard (custom views for Admin, Doctor, Nurse, etc.)
-│       ├── patients/
-│       │   ├── page.tsx     # Master Patient Index (MPI) registry & listing
-│       │   └── [id]/
-│       │       └── page.tsx # In-depth Patient Profile Chart (timeline logs, prescriptions, vitals)
-│       ├── admissions/
-│       │   └── page.tsx     # Ward & Bed occupancy map (interactive assigning & releasing beds)
-│       ├── billing/
-│       │   └── page.tsx     # Billing desk (invoice creation, payment recording, prints)
-│       ├── pharmacy/
-│       │   └── page.tsx     # Pharmacy inventory controller & prescription dispenser
-│       ├── laboratory/
-│       │   └── page.tsx     # Lab orders tracker & drag-and-drop clinical scan uploader
-│       ├── emergency/
-│       │   └── page.tsx     # ER Triage Queue (ESI sorting, vitals logging, patient waitlist)
-│       ├── telemedicine/
-│       │   └── page.tsx     # General telehealth consultations dashboard
-│       ├── settings/
-│       │   └── page.tsx     # System Admin dashboard (User registry, HIPAA Compliance Audit logs)
-│       └── clinical/
-│           ├── page.tsx     # Active Doctor Workspace (Gemini AI Scribe, Live Split-screen Video Consultation)
-│           └── [encounterId]/page.tsx
-├── components/
-│   ├── Sidebar.tsx          # Collapsible responsive navigator matching role permissions
-│   └── Topbar.tsx           # Global workspace header, active tenant context, and user logout
-├── store/                   # Zustand central stores
-│   ├── authStore.ts         # User session, JWT tokens, tenant details
-│   ├── patientsStore.ts     # Master patient demographics & timeline events
-│   ├── bedsStore.ts         # Inpatient wards, bed occupancy, ward admissions
-│   ├── laboratoryStore.ts   # Lab orders, attachments upload states
-│   ├── pharmacyStore.ts     # Inventory tracking, prescription dispense events
-│   ├── usersStore.ts        # Staff members list and user creations
-│   └── ...
-└── lib/
-    └── api.ts               # Axios client instance with automatic JWT authorization header injection
+```mermaid
+graph TD
+    Client[Next.js Web Client] -->|HTTPS REST / JWT| Gateway[NestJS Gateway API]
+    Client -->|WebRTC Media| Turn[STUN/TURN Server]
+    Gateway -->|JWT Auth Guard| Users[Users & RBAC Service]
+    Gateway -->|LLM Prompts| Gemini[Google Gemini Flash API]
+    Gateway -->|TypeORM Entity Mapper| DB[(PostgreSQL / Supabase)]
+    
+    subgraph medlink-api
+        Gateway
+        Users
+        Gemini
+    end
 ```
 
 ---
 
-## ⚙️ Backend Architecture (`medlink-api`)
+## 📦 Database Schema Diagram (TypeORM Entities)
 
-The API layer is built using **NestJS**, structuring domain logic into decoupled modules representing clinical capabilities.
+MedLink Addis uses TypeORM to map database tables dynamically. The database leverages **UUIDs** for resource identification and strictly isolates resources via a `hospital_id` tenant key for complete multi-tenant security.
 
-### 📂 Directory Map
-```
-medlink-api/
-├── src/
-│   ├── main.ts              # NestJS entry point (CORS setup, Global Validation pipes)
-│   ├── app.module.ts        # App Module (imports all core, database, and feature modules)
-│   ├── core/
-│   │   └── database/        # TypeORM connection config & base Tenant entities
-│   ├── shared/              # Global shared enums (User roles, permission guards)
-│   └── modules/             # decoupled NestJS feature modules
-│       ├── auth/            # JWT strategies, guards, decorators, password hashers
-│       ├── users/           # Staff accounts management, Role-Based Access Control (RBAC)
-│       ├── patients/        # Patient entities, MPI controller, patient timeline logs
-│       ├── beds/            # Inpatient bed entities, ward maps, ward admission logs
-│       ├── pharmacy/        # Pharmacy inventory database, prescription dispensing
-│       ├── laboratory/      # Lab order tracking, results, and upload attachments
-│       ├── emergency/       # ER Triage, ESI categories, vital signs records
-│       ├── dashboard/       # Aggregated KPIs and telemetry metrics
-│       └── ai/              # Ambient Scribe controller invoking Gemini 1.5 Flash models
+```mermaid
+erDiagram
+    Hospitals ||--o{ Users : "hosts"
+    Hospitals ||--o{ PatientEntities : "registers"
+    Hospitals ||--o{ Wards : "contains"
+    Hospitals ||--o{ Invoices : "bills"
+    
+    Users ||--o{ UserRoles : "assigned"
+    UserRoles }|--|| Roles : "maps"
+    
+    PatientEntities ||--o{ Encounters : "has"
+    PatientEntities ||--o{ BedAdmissions : "admitted"
+    PatientEntities ||--o{ Prescriptions : "prescribed"
+    PatientEntities ||--o{ LabOrders : "ordered"
+    PatientEntities ||--o{ Invoices : "billed"
+    
+    Wards ||--o{ Beds : "houses"
+    Beds ||--o{ BedAdmissions : "assigned"
 ```
 
 ---
 
-## 🔐 Security & Access Control Matrix
+## 🔌 API Routes Reference Matrix
 
-The EMR implements strict **Role-Based Access Control (RBAC)** across both frontend widgets and backend endpoints:
+All endpoints require a `Bearer <JWT_TOKEN>` authorization header except public authentication routes.
 
-| Feature / Page | Hospital Admin | Doctor | Nurse | Pharmacist | Cashier | Triage Nurse |
-| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Financial KPIs & Revenue** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Staff Registry & Settings**| ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Security Audit Logs** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Patient Registration** | ✅ | ❌ | ✅ | ❌ | ❌ | ✅ |
-| **Active Doctor Workspace**  | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Telehealth Call Start**    | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| **Emergency Triage Queue**   | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
-| **Dispense Medications**    | ❌ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| **Record Cashier Payments**  | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+### 🔑 Authentication & Admin Module
+| Method | Endpoint | Description | Access Level |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/auth/login` | Log in and retrieve JWT session token | Public |
+| `POST` | `/users` | Create a new staff account | Hospital Admin |
+| `GET` | `/users` | Retrieve all registered staff members | Hospital Admin |
+
+### 📋 Patient Demographics & Records Module
+| Method | Endpoint | Description | Access Level |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/patients` | List patients with pagination & query search | All Staff |
+| `POST` | `/patients` | Register new patient & generate MRN | Admin, Nurse, Triage |
+| `GET` | `/patients/:id` | Get patient details & complete history logs | All Staff |
+
+### 🛏️ Inpatient Ward & Bed Manager
+| Method | Endpoint | Description | Access Level |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/beds/wards` | Get ward map & bed occupancy details | Admin, Doctor, Nurse |
+| `GET` | `/beds/admissions` | Get all active bed admissions | Admin, Doctor, Nurse |
+| `POST` | `/beds/assign` | Assign a patient to an unoccupied clean bed | Receptionist, Admin |
+| `POST` | `/beds/admissions/:id/release` | Discharge patient and release bed | Receptionist, Admin |
+
+### 💊 Pharmacy inventory & Dispensing
+| Method | Endpoint | Description | Access Level |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/pharmacy/prescriptions` | Retrieve all pending & completed prescriptions | Pharmacist |
+| `GET` | `/pharmacy/inventory` | Retrieve stock levels & critical inventory levels | Pharmacist |
+| `POST` | `/pharmacy/dispense/:id` | Deduct stock and dispense prescription | Pharmacist |
+
+### 🧪 Laboratory Orders & Scans
+| Method | Endpoint | Description | Access Level |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/laboratory/orders` | Retrieve pending & resulted lab orders | Lab Tech, Doctor |
+| `POST` | `/laboratory/orders` | Place new laboratory order request | Doctor |
+| `POST` | `/laboratory/orders/:id/result` | Save test results & toggle critical alerts | Lab Tech |
 
 ---
 
-## 🚀 Quick Launch Instructions
+## ⚡ Highlighted Features & Workspace Layouts
 
-### Prerequisites
-- Node.js (v18+)
-- PostgreSQL Database Instance (or Supabase Connection String)
+### 🎥 1. Real-Time Telehealth Split-Screen
+- **Action**: Accessible via **"Start Telehealth"** on any active patient's chart context banner.
+- **Split Layout**:
+  - **Left Screen**: Live WebRTC call console displaying active call timer, remote patient webcam mockup, local video preview camera, audio mute controls, and red call disconnect button.
+  - **Right Screen**: Real-time SOAP clinical workspace, allowing physicians to type notes immediately during a consultation.
 
-### 1. Database Configuration
-In `medlink-api`, copy your database connection details into `.env`:
-```env
-DATABASE_URL=postgresql://postgres:[password]@db.supabase.co:5432/postgres
-JWT_SECRET=EMR_SUPER_SECRET_KEY
-GEMINI_API_KEY=AIzaSy...
-```
+### 🧬 2. Automated Vitals Synchronization
+- **Action**: Accessible via **"Import Triage Vitals"** button located on the **Objective (O)** note card in the doctor workspace.
+- **Data Flow**: Connects directly to the patient's triage queue records. Automatically fetches, formats, and appends blood pressure, heart rate, oxygen levels, and temperature metrics to the physician notes.
 
-### 2. Run the Backend REST API
+### 🛡️ 3. HIPAA Security Compliance Logs
+- **Action**: Accessible via `/settings` -> **Security Audit Logs** tab (Hospital Admins only).
+- **Log Metrics**: Captures and details timestamps, action categories, access levels (staff name + role), exact details, and client IP addresses for all system logins, chart reads, and prescription dispensing.
+- **Searchable**: Real-time filtering by actor name, action category, or description.
+
+### 📁 4. Lab Attachments & Scan Upload Desk
+- **Action**: Accessible via `/laboratory` -> **Enter Results** modal.
+- **Upload Zone**: Includes a drag-and-drop zone with animated progress indicators, supporting PDFs, Chest X-rays, Ultrasounds, and MRI scans.
+
+---
+
+## 🚀 Quick Launch & Build Commands
+
+### 📂 medlink-api (NestJS Server)
 ```bash
 cd medlink-api
+# Install dependencies
 npm install
-# Seed default roles, admin user, wards, and beds
+
+# Initialize PostgreSQL database schema and seed mock users, roles, wards, and beds
 npm run seed
-# Start backend server
+
+# Run the backend in development hot-reload mode
 npm run start:dev
 ```
 
-### 3. Run the Next.js Client
-In `medlink-addis`, ensure `.env` matches the backend endpoint:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3000
-```
-Then start the dev server:
+### 💻 medlink-addis (Next.js App Client)
 ```bash
 cd medlink-addis
+# Install dependencies
 npm install
+
+# Compile TypeScript and build optimal production bundles
+npm run build
+
+# Start NextJS local server
 npm run dev
 ```
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
